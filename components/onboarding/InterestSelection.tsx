@@ -73,7 +73,7 @@ export function InterestSelection({ onNext, onBack }: InterestSelectionProps) {
   };
 
   return (
-    <div className="relative w-full h-screen bg-white overflow-hidden">
+    <div className="relative w-full h-dvh bg-white overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white" />
 
       <div className="relative z-10 h-full flex flex-col px-6 py-8 text-black max-w-md mx-auto">

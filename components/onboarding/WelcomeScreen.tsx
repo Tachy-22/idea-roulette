@@ -40,7 +40,7 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
 
 
   return (
-    <div className="relative w-full h-screen bg-white overflow-hidden">
+    <div className="relative w-full h-dvh bg-white overflow-hidden">
       {/* Minimal background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white" />
 

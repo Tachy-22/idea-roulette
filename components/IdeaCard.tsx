@@ -118,7 +118,7 @@ export function IdeaCard({
 
   return (
     <motion.div
-      className="relative w-full h-screen flex flex-col"
+      className="relative w-full h-dvh flex flex-col"
       variants={cardVariants}
       initial="enter"
       animate={isActive ? "center" : "exit"}

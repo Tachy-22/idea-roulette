@@ -266,14 +266,14 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
 
   if (ideas.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-dvh">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
+    <div className="relative w-full h-dvh overflow-hidden bg-black">
       {/* Profile Button */}
       <div className="fixed top-6 right-6 z-30">
         <motion.button

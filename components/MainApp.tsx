@@ -26,7 +26,7 @@ export function MainApp({ initialIdeas }: MainAppProps) {
   // Show loading or nothing while checking onboarding status
   if (showOnboarding === null) {
     return (
-      <div className="w-full h-screen bg-black flex items-center justify-center">
+      <div className="w-full h-dvh bg-black flex items-center justify-center">
         <div className="text-white text-lg">Loading...</div>
       </div>
     );

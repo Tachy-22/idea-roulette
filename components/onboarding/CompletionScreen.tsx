@@ -42,7 +42,7 @@ export function CompletionScreen({ selectedInterests, onComplete }: CompletionSc
 
 
   return (
-    <div className="relative w-full h-screen bg-white overflow-hidden">
+    <div className="relative w-full h-dvh bg-white overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white" />
 
       {/* Main content */}
