@@ -130,7 +130,7 @@ export function InterestSelection({ onNext, onBack }: InterestSelectionProps) {
           className="flex-1 overflow-y-auto"
         >
           <div className="grid grid-cols-2 gap-4 pb-8">
-            {INTEREST_OPTIONS.map((interest, index) => {
+            {INTEREST_OPTIONS.map((interest) => {
               const IconComponent = interest.icon;
               const isSelected = selectedInterests.includes(interest.id);
 

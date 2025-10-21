@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, Zap } from 'lucide-react';
 import Image from 'next/image';
 
@@ -39,17 +38,6 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
     },
   };
 
-  const floatingVariants = {
-    animate: {
-      y: [-10, 10, -10],
-      rotate: [-5, 5, -5],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: 'easeInOut' as const,
-      }
-    }
-  };
 
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden">

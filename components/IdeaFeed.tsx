@@ -254,7 +254,7 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, ideas.length]);
+  }, [handleNextIdea, handlePreviousIdea, handleLike]);
 
   // Load initial data with user preferences
   useEffect(() => {
@@ -262,7 +262,7 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     if (ideas.length < 10) {
       loadMoreIdeas();
     }
-  }, []);
+  }, [ideas.length, loadMoreIdeas]);
 
   if (ideas.length === 0) {
     return (

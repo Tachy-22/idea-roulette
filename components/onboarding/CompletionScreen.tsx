@@ -82,7 +82,7 @@ export function CompletionScreen({ selectedInterests, onComplete }: CompletionSc
           {/* Selected Interests */}
           <motion.div variants={itemVariants} className="space-y-3">
             <p className="text-gray-600 text-sm">
-              You'll see ideas from:
+              You&apos;ll see ideas from:
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {selectedInterests.slice(0, 4).map((interest, index) => (

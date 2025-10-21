@@ -47,32 +47,6 @@ export function IdeaActions({
     },
   };
 
-  const expandButtonVariants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0,
-      y: 100,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        delay: 1.2,
-        type: 'spring' as const,
-        stiffness: 200,
-        damping: 20,
-      },
-    },
-    hover: { 
-      scale: 1.05,
-      transition: { duration: 0.2 }
-    },
-    tap: { 
-      scale: 0.95,
-      transition: { duration: 0.1 }
-    },
-  };
 
   return (
     <>
