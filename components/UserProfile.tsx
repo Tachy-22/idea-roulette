@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Heart, RotateCcw, Share, TrendingUp, User, Star } from 'lucide-react';
+import { X, Heart, RotateCcw, Share } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { 
   getLikedIdeas, 
@@ -15,7 +15,7 @@ import {
   clearAllData 
 } from '@/lib/storage';
 import { StartupIdea } from '@/lib/gemini';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 
 interface UserProfileProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ interface UserProfileProps {
 export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps) {
   const [likedIdeas, setLikedIdeas] = useState<StartupIdea[]>([]);
   const [personality, setPersonality] = useState<string>('');
-  const [preferences, setPreferences] = useState<any>(null);
+  const [, setPreferences] = useState<Record<string, unknown> | null>(null);
   const [swipeCount, setSwipeCount] = useState(0);
   const [interests, setInterests] = useState<string[]>([]);
 
@@ -34,14 +34,18 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
     if (isOpen) {
       setLikedIdeas(getLikedIdeas());
       setPersonality(getFounderPersonality());
-      setPreferences(getUserPreferences());
+      setPreferences(getUserPreferences() as  unknown as SetStateAction<Record<string, unknown> | null>);
       setSwipeCount(getSwipeCount());
       setInterests(getUserInterests());
     }
   }, [isOpen]);
 
   const getPersonalityConfig = () => {
-    const configs: Record<string, any> = {
+    const configs: Record<string, { 
+      icon: string; 
+      color: string; 
+      bgColor: string;
+    }> = {
       '🚀 Tech Visionary': {
         icon: 'brain',
         color: 'bg-red-500',

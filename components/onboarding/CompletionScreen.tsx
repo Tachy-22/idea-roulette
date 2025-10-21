@@ -72,7 +72,7 @@ export function CompletionScreen({ selectedInterests, onComplete }: CompletionSc
           {/* Title */}
           <motion.div variants={itemVariants} className="space-y-3">
             <h1 className="text-3xl font-bold">
-              You're all set!
+              You&apos;re all set!
             </h1>
             <p className="text-lg text-gray-600">
               Your personalized idea feed is ready
