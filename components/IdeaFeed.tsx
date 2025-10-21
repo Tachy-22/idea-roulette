@@ -314,14 +314,14 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
       </motion.div>
 
       {/* Loading indicator */}
-      {loading && (
+      {/* {loading && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
           <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 text-white">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">Loading more ideas...</span>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Swipe hint - TikTok style */}
       {/* <div className="fixed bottom-6 left-4 z-20 text-white/60 text-sm">
