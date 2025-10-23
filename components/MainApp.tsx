@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react';
 import { IdeaFeed } from './IdeaFeed';
 import { OnboardingFlow } from './onboarding/OnboardingFlow';
-import { isOnboardingCompleted } from '@/lib/storage';
+import { AuthWrapper } from './auth/AuthWrapper';
+import { isOnboardingCompleted } from '@/lib/firebase-storage';
 import { StartupIdea } from '@/lib/gemini';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface MainAppProps {
   initialIdeas: StartupIdea[];
@@ -14,9 +17,25 @@ export function MainApp({ initialIdeas }: MainAppProps) {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if onboarding is completed
-    const completed = isOnboardingCompleted();
-    setShowOnboarding(!completed);
+    // Wait for user authentication before checking onboarding status
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is authenticated, check onboarding status
+        try {
+          const completed = await isOnboardingCompleted();
+          setShowOnboarding(!completed);
+        } catch (error) {
+          console.error('Error checking onboarding status:', error);
+          // If there's an error, assume they need onboarding
+          setShowOnboarding(true);
+        }
+      } else {
+        // User not authenticated, reset state
+        setShowOnboarding(null);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleOnboardingComplete = () => {
@@ -32,11 +51,19 @@ export function MainApp({ initialIdeas }: MainAppProps) {
     );
   }
 
-  // Show onboarding if not completed
+  // Show onboarding wrapped in auth - only for authenticated users who haven't completed onboarding
   if (showOnboarding) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+    return (
+      <AuthWrapper>
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
+      </AuthWrapper>
+    );
   }
 
   // Show main app if onboarding is completed
-  return <IdeaFeed initialIdeas={initialIdeas} />;
+  return (
+    <AuthWrapper>
+      <IdeaFeed initialIdeas={initialIdeas} />
+    </AuthWrapper>
+  );
 }

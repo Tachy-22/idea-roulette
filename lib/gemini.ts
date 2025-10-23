@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getSeenIdeas } from './storage';
+// getSeenIdeas will be passed as parameter to avoid circular dependency
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 export interface StartupIdea {
@@ -24,28 +24,28 @@ export interface UserPreferences {
 
 export async function generateIdeas(
   preferences?: UserPreferences,
-  count: number = 10
+  count: number = 10,
+  seenIdeas: string[] = []
 ): Promise<StartupIdea[]> {
   // Add randomness to prevent repetitive ideas
   const randomSeed = Math.random().toString(36).substring(7);
   const timestamp = Date.now();
-  const seenIdeas = getSeenIdeas();
-  
+
   const diversityPrompts = [
     "Focus on emerging technologies and unexpected combinations",
-    "Think about problems that don't have solutions yet", 
+    "Think about problems that don't have solutions yet",
     "Combine traditional industries with modern tech",
     "Focus on underserved markets and niche communities",
     "Think about post-pandemic lifestyle changes",
     "Consider climate change and sustainability angles",
-    "Explore AR/VR and spatial computing possibilities", 
+    "Explore AR/VR and spatial computing possibilities",
     "Think about aging population and accessibility",
     "Consider remote work and digital nomad trends",
     "Focus on mental health and wellness innovations"
   ];
-  
+
   const randomDiversityPrompt = diversityPrompts[Math.floor(Math.random() * diversityPrompts.length)];
-  
+
   const prompt = `Generate ${count} COMPLETELY UNIQUE and creative startup ideas. AVOID common or obvious ideas. ${randomDiversityPrompt}
 
   IMPORTANT: Each idea must be:
@@ -102,19 +102,18 @@ export async function generateIdeas(
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    
+
     // Extract JSON from the response
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const ideas: StartupIdea[] = JSON.parse(jsonMatch[0]);
     return ideas;
   } catch (error) {
     console.error('Error generating ideas:', error);
-    // Return fallback ideas if API fails
-    return getFallbackIdeas().slice(0, count);
+    throw new Error('Failed to generate ideas. Please try again later.');
   }
 }
 
@@ -133,20 +132,16 @@ export async function generateRemixes(idea: StartupIdea): Promise<string[]> {
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    
+
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     console.error('Error generating remixes:', error);
-    return [
-      `${idea.name} for Teams`,
-      `${idea.name} Mobile`,
-      `AI-Powered ${idea.name}`
-    ];
+    throw new Error('Failed to generate remixes. Please try again later.');
   }
 }
 
@@ -156,7 +151,7 @@ export async function generateRemixIdeas(idea: StartupIdea, fullIdeas: boolean =
   }
 
   const randomSeed = Math.random().toString(36).substring(7);
-  
+
   const prompt = `Generate 3 COMPLETE startup ideas that are creative remixes/variations of this original idea:
 
   ORIGINAL IDEA:
@@ -196,73 +191,17 @@ export async function generateRemixIdeas(idea: StartupIdea, fullIdeas: boolean =
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    
+
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const remixIdeas: StartupIdea[] = JSON.parse(jsonMatch[0]);
     return remixIdeas;
   } catch (error) {
     console.error('Error generating remix ideas:', error);
-    // Return fallback remix ideas
-    return [
-      {
-        name: `${idea.name} Pro`,
-        icon: 'briefcase',
-        tagline: `Enterprise version of ${idea.tagline}`,
-        category: idea.category,
-        rating: 8.1,
-        description: `Professional-grade version of ${idea.name} designed for teams and organizations with advanced features and compliance.`,
-        tags: ['enterprise', 'teams', 'professional'],
-        remixes: [`${idea.name} Enterprise`, `${idea.name} Teams`, `${idea.name} Compliance`]
-      },
-      {
-        name: `${idea.name} Mobile`,
-        icon: 'smartphone',
-        tagline: `${idea.tagline} - on the go`,
-        category: idea.category,
-        rating: 7.9,
-        description: `Mobile-first version of ${idea.name} optimized for smartphones with offline capabilities and native features.`,
-        tags: ['mobile', 'app', 'on-the-go'],
-        remixes: [`${idea.name} Lite`, `${idea.name} Offline`, `${idea.name} Widget`]
-      }
-    ];
+    throw new Error('Failed to generate remix ideas. Please try again later.');
   }
 }
 
-function getFallbackIdeas(): StartupIdea[] {
-  return [
-    {
-      name: "DreamSync",
-      icon: "moon",
-      tagline: "Record and analyze your dreams using AI",
-      category: "AI / Lifestyle",
-      rating: 8.4,
-      description: "Voice-record your dreams each morning and get AI-powered insights about your subconscious patterns and emotional state.",
-      tags: ["AI", "mental health", "sleep"],
-      remixes: ["DreamSync for Couples", "DreamSync for Kids", "DreamSync Analytics"]
-    },
-    {
-      name: "CodeWhisper",
-      icon: "code",
-      tagline: "AI pair programming with voice commands",
-      category: "AI / Developer Tools",
-      rating: 9.1,
-      description: "Talk to your IDE and let AI write code while you explain your logic in natural language.",
-      tags: ["AI", "developer tools", "voice"],
-      remixes: ["CodeWhisper Mobile", "CodeWhisper for Teams", "CodeWhisper Education"]
-    },
-    {
-      name: "PlantParent",
-      icon: "leaf",
-      tagline: "Smart plant care with computer vision",
-      category: "IoT / Home",
-      rating: 7.8,
-      description: "Point your phone at plants to get instant health diagnostics and personalized care recommendations.",
-      tags: ["computer vision", "plants", "home"],
-      remixes: ["PlantParent Pro", "PlantParent for Offices", "PlantParent Social"]
-    }
-  ];
-}

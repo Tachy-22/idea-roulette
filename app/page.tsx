@@ -1,9 +1,9 @@
 import { MainApp } from '@/components/MainApp';
-import { generateIdeas } from '@/lib/gemini';
 
 export default async function Home() {
-  // Generate fewer initial ideas server-side to speed up build
-  const initialIdeas = await generateIdeas(undefined, 5);
+  // Ideas will be generated client-side after authentication
+  // No server-side generation needed
+  const initialIdeas: [] = [];
 
   return <MainApp initialIdeas={initialIdeas} />;
 }

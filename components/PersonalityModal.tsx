@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getFounderPersonality, getUserPreferences, getLikedIdeas } from '@/lib/storage';
+import { getFounderPersonality, getUserPreferences, getLikedIdeas } from '@/lib/firebase-storage';
 import { Star, TrendingUp, Heart, Brain } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface PersonalityModalProps {
   open: boolean;
@@ -13,9 +14,27 @@ interface PersonalityModalProps {
 }
 
 export function PersonalityModal({ open, onOpenChange }: PersonalityModalProps) {
-  const personality = getFounderPersonality();
-  const preferences = getUserPreferences();
-  const likedIdeas = getLikedIdeas();
+  const [personality, setPersonality] = useState('🌟 Emerging Founder');
+  const [preferences, setPreferences] = useState<{ likedCategories: string[] }>({ likedCategories: [] });
+  const [likedIdeas, setLikedIdeas] = useState<unknown[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      const loadData = async () => {
+        const [personalityData, preferencesData, likedData] = await Promise.all([
+          getFounderPersonality(),
+          getUserPreferences(),
+          getLikedIdeas()
+        ]);
+        
+        setPersonality(personalityData);
+        setPreferences(preferencesData);
+        setLikedIdeas(likedData);
+      };
+      
+      loadData();
+    }
+  }, [open]);
 
   const personalityConfig = {
     '🚀 Tech Visionary': {

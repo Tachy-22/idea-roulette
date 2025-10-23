@@ -12,10 +12,12 @@ import {
   getUserPreferences, 
   getSwipeCount,
   getUserInterests,
-  clearAllData 
-} from '@/lib/storage';
+  clearAllUserData 
+} from '@/lib/firebase-storage';
 import { StartupIdea } from '@/lib/gemini';
 import { useState, useEffect, SetStateAction } from 'react';
+import { auth } from '@/lib/firebase';
+import { User } from 'firebase/auth';
 
 interface UserProfileProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps) {
+  const [user, setUser] = useState<User | null>(null);
   const [likedIdeas, setLikedIdeas] = useState<StartupIdea[]>([]);
   const [personality, setPersonality] = useState<string>('');
   const [, setPreferences] = useState<Record<string, unknown> | null>(null);
@@ -32,11 +35,26 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
 
   useEffect(() => {
     if (isOpen) {
-      setLikedIdeas(getLikedIdeas());
-      setPersonality(getFounderPersonality());
-      setPreferences(getUserPreferences() as  unknown as SetStateAction<Record<string, unknown> | null>);
-      setSwipeCount(getSwipeCount());
-      setInterests(getUserInterests());
+      // Get current user
+      setUser(auth.currentUser);
+      
+      const loadData = async () => {
+        const [likedData, personalityData, preferencesData, swipeData, interestsData] = await Promise.all([
+          getLikedIdeas(),
+          getFounderPersonality(),
+          getUserPreferences(),
+          getSwipeCount(),
+          getUserInterests()
+        ]);
+        
+        setLikedIdeas(likedData);
+        setPersonality(personalityData);
+        setPreferences(preferencesData as unknown as SetStateAction<Record<string, unknown> | null>);
+        setSwipeCount(swipeData);
+        setInterests(interestsData);
+      };
+      
+      loadData();
     }
   }, [isOpen]);
 
@@ -159,6 +177,32 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
 
             <ScrollArea className="h-[calc(100%)] ">
               <div className="p-6 space-y-8">
+                {/* User Profile Header */}
+                {user && (
+                  <motion.div
+                    variants={itemVariants}
+                    initial="initial"
+                    animate="animate"
+                    className="pt-8"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      {user.photoURL && (
+                        <img 
+                          src={user.photoURL} 
+                          alt="Profile" 
+                          className="w-16 h-16 rounded-full border-2 border-white/20"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-white mb-1">
+                          {user.displayName || 'User'}
+                        </h2>
+                        <p className="text-white/70 text-sm">{user.email}</p>
+                        <p className="text-white/50 text-xs mt-1">Track your startup journey</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
                 {/* Personality Section */}
                 <motion.div
                   variants={itemVariants}
@@ -296,9 +340,9 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                   className="pt-4 border-t border-white/10"
                 >
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm('Are you sure you want to clear all your data? This cannot be undone.')) {
-                        clearAllData();
+                        await clearAllUserData();
                         onClose();
                         window.location.reload();
                       }

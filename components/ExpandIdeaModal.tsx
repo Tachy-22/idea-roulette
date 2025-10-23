@@ -6,7 +6,6 @@ import { Progress } from '@/components/ui/progress';
 import { X, Heart, RotateCcw, Share, Lightbulb, Target, Users, DollarSign, Rocket, TrendingUp } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { StartupIdea } from '@/lib/gemini';
-import { isIdeaLiked } from '@/lib/storage';
 
 interface ExpandIdeaModalProps {
   idea: StartupIdea | null;
@@ -28,7 +27,6 @@ export function ExpandIdeaModal({
   if (!idea) return null;
 
   const IconComponent = Icons[idea.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>;
-  const liked = isIdeaLiked(idea.name);
 
   const getGradientClass = (category: string) => {
     if (category.includes('AI')) return 'from-purple-500 to-pink-500';
@@ -250,13 +248,9 @@ export function ExpandIdeaModal({
                 <div className="flex justify-center gap-6">
                   <button
                     onClick={onLike}
-                    className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-                      liked
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                    }`}
+                    className="w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white border border-white/20"
                   >
-                    <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+                    <Heart className="w-5 h-5" />
                   </button>
                   
                   <button

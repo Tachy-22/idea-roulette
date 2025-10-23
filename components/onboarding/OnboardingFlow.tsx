@@ -5,7 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 import { WelcomeScreen } from './WelcomeScreen';
 import { InterestSelection } from './InterestSelection';
 import { CompletionScreen } from './CompletionScreen';
-import { setUserInterests, setOnboardingCompleted } from '@/lib/storage';
+import { setUserInterests, setOnboardingCompleted } from '@/lib/firebase-storage';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -21,9 +21,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setCurrentStep('interests');
   };
 
-  const handleInterestsNext = (interests: string[]) => {
+  const handleInterestsNext = async (interests: string[]) => {
     setSelectedInterests(interests);
-    setUserInterests(interests);
+    await setUserInterests(interests);
     setCurrentStep('completion');
   };
 
@@ -31,8 +31,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setCurrentStep('welcome');
   };
 
-  const handleComplete = () => {
-    setOnboardingCompleted(true);
+  const handleComplete = async () => {
+    await setOnboardingCompleted(true);
     onComplete();
   };
 

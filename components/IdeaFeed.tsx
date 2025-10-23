@@ -9,10 +9,15 @@ import {
   removeLikedIdea,
   isIdeaLiked,
   incrementSwipeCount,
-  getUserPreferences,
   isPersonalityUnlocked,
   addSeenIdea
-} from '@/lib/storage';
+} from '@/lib/firebase-storage';
+import { trackIdeaInteraction } from '@/lib/analytics';
+import {
+  shouldLoadMoreIdeas,
+  loadMoreIdeas,
+  initializeUserIdeas
+} from '@/lib/idea-manager';
 import { PersonalityModal } from './PersonalityModal';
 import { UserProfile } from './UserProfile';
 import { ExpandIdeaModal } from './ExpandIdeaModal';
@@ -27,6 +32,7 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const [ideas, setIdeas] = useState<StartupIdea[]>(initialIdeas);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [showPersonality, setShowPersonality] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showExpandModal, setShowExpandModal] = useState(false);
@@ -34,29 +40,35 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const [direction, setDirection] = useState<'next' | 'previous'>('next');
   const { toast } = useToast();
 
-  // Preload more ideas when nearing the end
-  const loadMoreIdeas = useCallback(async () => {
-    if (loading || currentIndex < ideas.length - 3) return;
+  // Load more ideas when running low
+  const handleLoadMoreIdeas = useCallback(async () => {
+    if (loading) return;
+
+    // Check if we need more ideas (when 15 or fewer remaining)
+    if (!shouldLoadMoreIdeas(currentIndex, ideas.length, 15)) return;
 
     setLoading(true);
     try {
-      const preferences = getUserPreferences();
-      const response = await fetch('/api/ideas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preferences, count: 30 }),
-      });
-
-      if (response.ok) {
-        const newIdeas: StartupIdea[] = await response.json();
+      console.log(`Loading more ideas... Current: ${currentIndex}/${ideas.length}`);
+      
+      // Generate and store 15 new ideas
+      const newIdeas = await loadMoreIdeas(15);
+      
+      if (newIdeas.length > 0) {
         setIdeas(prev => [...prev, ...newIdeas]);
+        console.log(`Added ${newIdeas.length} new ideas. Total: ${ideas.length + newIdeas.length}`);
       }
     } catch (error) {
       console.error('Failed to load more ideas:', error);
+      toast({
+        title: "Failed to load more ideas",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [currentIndex, ideas.length, loading]);
+  }, [currentIndex, ideas.length, loading, toast]);
 
   // Handle swipe gestures
   const handleDragEnd = (_: unknown, info: PanInfo) => {
@@ -73,24 +85,26 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     }
   };
 
-  const handleNextIdea = () => {
+  const handleNextIdea = async () => {
     if (currentIndex < ideas.length - 1) {
-      // Mark current idea as seen
+      // Mark current idea as seen with full analytics data
       const currentIdea = ideas[currentIndex];
       if (currentIdea) {
-        addSeenIdea(currentIdea.name);
+        await addSeenIdea(currentIdea.name, currentIdea.category, currentIdea.rating);
       }
 
       setDirection('next');
       setCurrentIndex(prev => prev + 1);
-      const swipeCount = incrementSwipeCount();
+      const swipeCount = await incrementSwipeCount();
 
       // Check if personality should be unlocked
-      if (swipeCount === 10 && !isPersonalityUnlocked()) {
+      const personalityUnlocked = await isPersonalityUnlocked();
+      if (swipeCount === 10 && !personalityUnlocked) {
         setTimeout(() => setShowPersonality(true), 1000);
       }
 
-      loadMoreIdeas();
+      // Check if we need to load more ideas after advancing
+      handleLoadMoreIdeas();
     }
   };
 
@@ -101,20 +115,20 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
     const currentIdea = ideas[currentIndex];
     if (!currentIdea) return;
 
-    const liked = isIdeaLiked(currentIdea.name);
+    const liked = await isIdeaLiked(currentIdea.name);
 
     if (liked) {
-      removeLikedIdea(currentIdea.name);
+      await removeLikedIdea(currentIdea.name);
       toast({
         title: "Removed from favorites",
         description: `${currentIdea.name} has been removed from your liked ideas.`,
       });
     } else {
-      addLikedIdea(currentIdea);
+      await addLikedIdea(currentIdea);
       toast({
         title: "Added to favorites! ❤️",
         description: `${currentIdea.name} has been added to your liked ideas.`,
@@ -125,6 +139,19 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const handleRemix = async () => {
     const currentIdea = ideas[currentIndex];
     if (!currentIdea) return;
+
+    // Track analytics for remix action
+    try {
+      await trackIdeaInteraction(
+        currentIdea.name,
+        currentIdea.category,
+        currentIdea.rating,
+        'remix'
+      );
+      console.log('Successfully tracked remix for:', currentIdea.name);
+    } catch (error) {
+      console.error('Failed to track remix analytics:', error);
+    }
 
     // Show loading state
     toast({
@@ -186,6 +213,19 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const handleShare = async () => {
     const currentIdea = ideas[currentIndex];
     if (!currentIdea) return;
+
+    // Track analytics for share action
+    try {
+      await trackIdeaInteraction(
+        currentIdea.name,
+        currentIdea.category,
+        currentIdea.rating,
+        'share'
+      );
+      console.log('Successfully tracked share for:', currentIdea.name);
+    } catch (error) {
+      console.error('Failed to track share analytics:', error);
+    }
 
     try {
       const shareText = `🚀 Check out this startup idea: ${currentIdea.name} - ${currentIdea.tagline} \n\nSwipe startup ideas like TikToks on IdeaRoulette!`;
@@ -256,18 +296,50 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNextIdea, handlePreviousIdea, handleLike]);
 
-  // Load initial data with user preferences
+  // Initialize ideas when component mounts
   useEffect(() => {
-    // Only load more if we have less than 10 ideas, since we start with 30
-    if (ideas.length < 10) {
-      loadMoreIdeas();
-    }
-  }, [ideas.length, loadMoreIdeas]);
+    const initializeIdeas = async () => {
+      if (ideas.length === 0) {
+        setInitializing(true);
+        try {
+          console.log('Initializing ideas for new session...');
+          const newIdeas = await initializeUserIdeas(30);
+          setIdeas(newIdeas);
+          console.log(`Initialized with ${newIdeas.length} ideas`);
+        } catch (error) {
+          console.error('Failed to initialize ideas:', error);
+          toast({
+            title: "Failed to load ideas",
+            description: "Please refresh the page to try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setInitializing(false);
+        }
+      } else {
+        setInitializing(false);
+      }
+    };
 
-  if (ideas.length === 0) {
+    initializeIdeas();
+  }, []); // Only run once on mount
+
+  // Check for more ideas when advancing through them
+  useEffect(() => {
+    if (!initializing && ideas.length > 0) {
+      handleLoadMoreIdeas();
+    }
+  }, [currentIndex, initializing, handleLoadMoreIdeas]);
+
+  if (initializing || ideas.length === 0) {
     return (
-      <div className="flex items-center justify-center h-dvh">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex items-center justify-center h-dvh bg-black">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white/70">
+            {initializing ? 'Generating your personalized ideas...' : 'Loading ideas...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -307,7 +379,7 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
             onRemix={handleRemix}
             onShare={handleShare}
             onExpand={handleExpand}
-            isLiked={isIdeaLiked(ideas[currentIndex]?.name || '')}
+            isLiked={false} // Will be handled internally by the component
             direction={direction}
           />
         </AnimatePresence>
