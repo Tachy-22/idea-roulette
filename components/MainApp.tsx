@@ -6,8 +6,6 @@ import { OnboardingFlow } from './onboarding/OnboardingFlow';
 import { AuthWrapper } from './auth/AuthWrapper';
 import { isOnboardingCompleted } from '@/lib/firebase-storage';
 import { StartupIdea } from '@/lib/gemini';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 
 interface MainAppProps {
   initialIdeas: StartupIdea[];
@@ -17,25 +15,19 @@ export function MainApp({ initialIdeas }: MainAppProps) {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Wait for user authentication before checking onboarding status
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // User is authenticated, check onboarding status
-        try {
-          const completed = await isOnboardingCompleted();
-          setShowOnboarding(!completed);
-        } catch (error) {
-          console.error('Error checking onboarding status:', error);
-          // If there's an error, assume they need onboarding
-          setShowOnboarding(true);
-        }
-      } else {
-        // User not authenticated, reset state
-        setShowOnboarding(null);
+    // AuthWrapper ensures user is authenticated, so just check onboarding
+    const checkOnboarding = async () => {
+      try {
+        const completed = await isOnboardingCompleted();
+        setShowOnboarding(!completed);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        // If there's an error, assume they need onboarding
+        setShowOnboarding(true);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    checkOnboarding();
   }, []);
 
   const handleOnboardingComplete = () => {
