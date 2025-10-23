@@ -48,8 +48,8 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const handleLoadMoreIdeas = useCallback(async () => {
     if (loading) return;
 
-    // Check if we need more ideas (when 15 or fewer remaining)
-    if (!shouldLoadMoreIdeas(currentIndex, ideas.length, 15)) return;
+    // Check if we need more ideas (when 5 or fewer remaining for faster preloading)
+    if (!shouldLoadMoreIdeas(currentIndex, ideas.length, 5)) return;
 
     setLoading(true);
     try {
@@ -350,9 +350,25 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
         setInitializing(true);
         try {
           console.log('Initializing ideas for new session...');
-          const newIdeas = await initializeUserIdeas(30);
+          // Start with just 5 ideas for fast loading
+          const newIdeas = await initializeUserIdeas(5);
           setIdeas(newIdeas);
           console.log(`Initialized with ${newIdeas.length} ideas`);
+          
+          // Immediately load more ideas in background for seamless experience
+          setTimeout(async () => {
+            try {
+              console.log('Loading additional ideas in background...');
+              const additionalIdeas = await loadMoreIdeas(15);
+              if (additionalIdeas.length > 0) {
+                setIdeas(prev => [...prev, ...additionalIdeas]);
+                console.log(`Added ${additionalIdeas.length} more ideas in background`);
+              }
+            } catch (error) {
+              console.error('Failed to load background ideas:', error);
+            }
+          }, 1000); // Load more after 1 second
+          
         } catch (error) {
           console.error('Failed to initialize ideas:', error);
           toast({
@@ -422,7 +438,10 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
           <p className="text-white/70">
-            {initializing ? 'Generating your personalized ideas...' : 'Loading ideas...'}
+            {initializing ? 'Crafting your first ideas...' : 'Loading ideas...'}
+          </p>
+          <p className="text-white/50 text-sm mt-2">
+            This should only take a few seconds
           </p>
         </div>
       </div>

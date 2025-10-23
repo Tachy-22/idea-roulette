@@ -91,15 +91,15 @@ export const loadMoreIdeas = async (
   }
 };
 
-// Initialize with initial batch of ideas
-export const initializeUserIdeas = async (initialCount: number = 30): Promise<StartupIdea[]> => {
+// Initialize with initial batch of ideas (reduced for faster loading)
+export const initializeUserIdeas = async (initialCount: number = 5): Promise<StartupIdea[]> => {
   try {
     console.log(`Initializing with ${initialCount} ideas...`);
     
     // Get user preferences
     const preferences = await getUserPreferences();
     
-    // Generate initial batch
+    // Generate initial batch (small for fast loading)
     const initialIdeas = await generateAndStoreIdeas(preferences, initialCount);
     
     console.log(`Initialized with ${initialIdeas.length} ideas`);

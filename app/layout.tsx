@@ -14,7 +14,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "IdeaRoulette - Swipe Startup Ideas Like TikToks",
-  description: "Discover endless startup ideas through an addictive TikTok-style interface powered by AI",
+  description: "Discover endless startup ideas through an engaging TikTok-style interface powered by AI. Find your next big business idea with personalized recommendations.",
+  openGraph: {
+    title: "IdeaRoulette - Swipe Startup Ideas Like TikToks",
+    description: "Discover endless startup ideas through an engaging TikTok-style interface powered by AI. Find your next big business idea with personalized recommendations.",
+    images: ["/og-image.png"],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "IdeaRoulette - Swipe Startup Ideas Like TikToks",
+    description: "Discover endless startup ideas through an engaging TikTok-style interface powered by AI. Find your next big business idea with personalized recommendations.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
