@@ -78,14 +78,14 @@ export function ExpandIdeaModal({
     },
   };
 
-  // Mock detailed sections for the expanded view
-  const mockSections = {
-    problem: "Current solutions are fragmented and don't address the core user pain points. There's a significant gap in the market for an integrated approach.",
-    solution: `${idea.description} This revolutionary approach combines cutting-edge technology with user-centered design to create a seamless experience.`,
-    market: "Target market size: $12.5B globally. Growing at 23% annually with increasing demand for innovative solutions in this space.",
-    business: "Freemium model with premium features. Revenue streams: subscriptions ($29/month), enterprise sales ($299/month), and API partnerships.",
-    competition: "Current competitors include legacy solutions that lack modern features. Our unique approach provides a significant competitive advantage.",
-    team: "Looking for co-founder with technical background. Ideal team includes product, engineering, and marketing expertise."
+  // Generate dynamic sections based on the actual idea
+  const dynamicSections = {
+    problem: `Many people in the ${idea.category.toLowerCase()} space struggle with challenges that ${idea.name} aims to solve. Current solutions often fall short of addressing the core needs around ${idea.tags.slice(0, 2).join(' and ')}.`,
+    solution: `${idea.description} This innovative approach leverages ${idea.tags.slice(0, 3).join(', ')} to create a comprehensive solution that addresses real user needs.`,
+    market: `The ${idea.category} market shows strong growth potential, especially in areas related to ${idea.tags.slice(0, 2).join(' and ')}. With a rating of ${idea.rating}/10, this idea shows promising market validation potential.`,
+    business: `${idea.name} could explore multiple revenue models including subscription services, premium features, and strategic partnerships within the ${idea.category.toLowerCase()} ecosystem.`,
+    competition: `While there are existing solutions in ${idea.category.toLowerCase()}, ${idea.name} differentiates itself through its focus on ${idea.tags.slice(0, 2).join(' and ')}, providing a unique value proposition.`,
+    team: `Building ${idea.name} would benefit from expertise in ${idea.tags.slice(0, 3).join(', ')} as well as strong product and business development skills to bring this ${idea.category.toLowerCase()} solution to market.`
   };
 
   return (
@@ -177,7 +177,7 @@ export function ExpandIdeaModal({
                         <Lightbulb className="w-5 h-5 text-yellow-400" />
                         <h3 className="text-white font-bold text-lg">The Problem</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.problem}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.problem}</p>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="space-y-3">
@@ -185,7 +185,7 @@ export function ExpandIdeaModal({
                         <Rocket className="w-5 h-5 text-blue-400" />
                         <h3 className="text-white font-bold text-lg">Our Solution</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.solution}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.solution}</p>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="space-y-3">
@@ -193,7 +193,7 @@ export function ExpandIdeaModal({
                         <Target className="w-5 h-5 text-green-400" />
                         <h3 className="text-white font-bold text-lg">Market Opportunity</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.market}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.market}</p>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="space-y-3">
@@ -201,7 +201,7 @@ export function ExpandIdeaModal({
                         <DollarSign className="w-5 h-5 text-yellow-400" />
                         <h3 className="text-white font-bold text-lg">Business Model</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.business}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.business}</p>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="space-y-3">
@@ -209,7 +209,7 @@ export function ExpandIdeaModal({
                         <TrendingUp className="w-5 h-5 text-purple-400" />
                         <h3 className="text-white font-bold text-lg">Competitive Advantage</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.competition}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.competition}</p>
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="space-y-3">
@@ -217,7 +217,7 @@ export function ExpandIdeaModal({
                         <Users className="w-5 h-5 text-pink-400" />
                         <h3 className="text-white font-bold text-lg">Team & Next Steps</h3>
                       </div>
-                      <p className="text-white/80 leading-relaxed">{mockSections.team}</p>
+                      <p className="text-white/80 leading-relaxed">{dynamicSections.team}</p>
                     </motion.div>
                   </div>
 

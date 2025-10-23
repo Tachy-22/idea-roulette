@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-type ToastVariant = 'default' | 'destructive';
+type ToastVariant = 'default' | 'destructive' | 'success';
 
 interface Toast {
   id: string;
@@ -33,8 +33,13 @@ export function useToast() {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 5000);
 
-    // For now, just log to console since we don't have a toast component set up
-    console.log(`Toast: ${input.title}${input.description ? ` - ${input.description}` : ''}`);
+    // Store the latest toast for the inline toast component
+    if (typeof window !== 'undefined') {
+      // Dispatch a custom event that components can listen to
+      window.dispatchEvent(new CustomEvent('inline-toast', {
+        detail: { id, ...input, variant: input.variant || 'default' }
+      }));
+    }
   }, []);
 
   const dismiss = useCallback((id: string) => {

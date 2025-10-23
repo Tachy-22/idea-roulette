@@ -16,6 +16,7 @@ interface IdeaCardProps {
   onShare: () => void;
   onExpand: () => void;
   isLiked: boolean;
+  isRemixing?: boolean;
   direction?: 'next' | 'previous';
 }
 
@@ -27,6 +28,7 @@ export function IdeaCard({
   onShare,
   onExpand,
   isLiked,
+  isRemixing = false,
   direction = 'next'
 }: IdeaCardProps) {
   const [showHearts, setShowHearts] = useState(false);
@@ -259,6 +261,7 @@ export function IdeaCard({
         onExpand={onExpand}
         isLiked={isLiked}
         isActive={isActive}
+        isRemixing={isRemixing}
       />
 
       {/* Animated Hearts */}

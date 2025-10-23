@@ -45,13 +45,6 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
 
   if (loading) {
     return (

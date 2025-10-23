@@ -7,8 +7,6 @@ import {
   arrayUnion, 
   arrayRemove,
   collection,
-  query,
-  where,
   getDocs 
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
@@ -16,7 +14,6 @@ import { db, auth } from './firebase';
 import { StartupIdea, UserPreferences } from './gemini';
 import { 
   trackIdeaInteraction, 
-  getCurrentSession,
   UserBehavior 
 } from './analytics';
 

@@ -79,7 +79,7 @@ export function AdminAuth({ children }: AdminAuthProps) {
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-2">
-            You don't have admin permissions to access this dashboard.
+            You don&apos;t have admin permissions to access this dashboard.
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Signed in as: {user.email}

@@ -21,6 +21,7 @@ import {
 import { PersonalityModal } from './PersonalityModal';
 import { UserProfile } from './UserProfile';
 import { ExpandIdeaModal } from './ExpandIdeaModal';
+import { InlineToast, ToastData } from './InlineToast';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, User } from 'lucide-react';
 
@@ -38,6 +39,9 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
   const [showExpandModal, setShowExpandModal] = useState(false);
   const [expandedIdea, setExpandedIdea] = useState<StartupIdea | null>(null);
   const [direction, setDirection] = useState<'next' | 'previous'>('next');
+  const [likedIdeas, setLikedIdeas] = useState<Set<string>>(new Set());
+  const [isRemixing, setIsRemixing] = useState(false);
+  const [currentToast, setCurrentToast] = useState<ToastData | null>(null);
   const { toast } = useToast();
 
   // Load more ideas when running low
@@ -85,22 +89,31 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     }
   };
 
-  const handleNextIdea = async () => {
+  const handleNextIdea = () => {
     if (currentIndex < ideas.length - 1) {
-      // Mark current idea as seen with full analytics data
       const currentIdea = ideas[currentIndex];
-      if (currentIdea) {
-        await addSeenIdea(currentIdea.name, currentIdea.category, currentIdea.rating);
-      }
-
+      
+      // Update UI immediately for responsive feel
       setDirection('next');
       setCurrentIndex(prev => prev + 1);
-      const swipeCount = await incrementSwipeCount();
 
-      // Check if personality should be unlocked
-      const personalityUnlocked = await isPersonalityUnlocked();
-      if (swipeCount === 10 && !personalityUnlocked) {
-        setTimeout(() => setShowPersonality(true), 1000);
+      // Do async operations in background without blocking UI
+      if (currentIdea) {
+        // Mark current idea as seen with full analytics data (background)
+        addSeenIdea(currentIdea.name, currentIdea.category, currentIdea.rating).catch(console.error);
+        
+        // Handle swipe count and personality unlock (background)
+        (async () => {
+          try {
+            const swipeCount = await incrementSwipeCount();
+            const personalityUnlocked = await isPersonalityUnlocked();
+            if (swipeCount === 10 && !personalityUnlocked) {
+              setTimeout(() => setShowPersonality(true), 1000);
+            }
+          } catch (error) {
+            console.error('Error handling swipe count:', error);
+          }
+        })();
       }
 
       // Check if we need to load more ideas after advancing
@@ -115,59 +128,92 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     }
   };
 
-  const handleLike = async () => {
+  const handleLike = () => {
     const currentIdea = ideas[currentIndex];
     if (!currentIdea) return;
 
-    const liked = await isIdeaLiked(currentIdea.name);
-
-    if (liked) {
-      await removeLikedIdea(currentIdea.name);
-      toast({
-        title: "Removed from favorites",
-        description: `${currentIdea.name} has been removed from your liked ideas.`,
-      });
+    // Update UI state immediately for responsiveness
+    const wasLiked = likedIdeas.has(currentIdea.name);
+    const newLikedIdeas = new Set(likedIdeas);
+    
+    if (wasLiked) {
+      newLikedIdeas.delete(currentIdea.name);
     } else {
-      await addLikedIdea(currentIdea);
-      toast({
-        title: "Added to favorites! ❤️",
-        description: `${currentIdea.name} has been added to your liked ideas.`,
-      });
+      newLikedIdeas.add(currentIdea.name);
     }
+    setLikedIdeas(newLikedIdeas);
+
+    // Handle database update in background
+    (async () => {
+      try {
+        if (wasLiked) {
+          await removeLikedIdea(currentIdea.name);
+          toast({
+            title: "Removed from favorites",
+            description: `${currentIdea.name} has been removed from your liked ideas.`,
+          });
+        } else {
+          await addLikedIdea(currentIdea);
+          toast({
+            title: "Added to favorites!",
+            description: `${currentIdea.name} has been added to your liked ideas.`,
+            variant: "success",
+          });
+        }
+      } catch (error) {
+        console.error('Error handling like:', error);
+        // Revert the UI state on error
+        setLikedIdeas(likedIdeas);
+        toast({
+          title: "Error",
+          description: "Failed to update favorites. Please try again.",
+          variant: "destructive",
+        });
+      }
+    })();
   };
 
-  const handleRemix = async () => {
+  const handleRemix = () => {
     const currentIdea = ideas[currentIndex];
-    if (!currentIdea) return;
+    if (!currentIdea || isRemixing) return;
 
-    // Track analytics for remix action
-    try {
-      await trackIdeaInteraction(
-        currentIdea.name,
-        currentIdea.category,
-        currentIdea.rating,
-        'remix'
-      );
-      console.log('Successfully tracked remix for:', currentIdea.name);
-    } catch (error) {
-      console.error('Failed to track remix analytics:', error);
-    }
+    // Set loading state
+    setIsRemixing(true);
 
-    // Show loading state
+    // Show loading state immediately
     toast({
-      title: "🎨 Generating Remixes...",
-      description: "Creating new variations of this idea",
+      title: "Generating Remixes...",
+      description: "AI is creating new variations",
     });
 
-    try {
-      const response = await fetch('/api/remix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea: currentIdea }),
-      });
+    // Handle remix generation in background
+    (async () => {
+      try {
+        // Track analytics for remix action
+        try {
+          await trackIdeaInteraction(
+            currentIdea.name,
+            currentIdea.category,
+            currentIdea.rating,
+            'remix'
+          );
+          console.log('Successfully tracked remix for:', currentIdea.name);
+        } catch (error) {
+          console.error('Failed to track remix analytics:', error);
+        }
 
-      if (response.ok) {
+        const response = await fetch('/api/remix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea: currentIdea }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
         const remixData = await response.json();
+        console.log('Remix response:', remixData);
 
         // remixData could be just remixes array or full ideas
         if (Array.isArray(remixData) && typeof remixData[0] === 'string') {
@@ -187,8 +233,9 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
           // Full remix ideas - insert after current idea
           const remixIdeas: StartupIdea[] = remixData;
           toast({
-            title: "🎨 Remix Ideas Generated!",
-            description: `Created ${remixIdeas.length} full remix ideas. Swipe to see them!`,
+            title: "3 Remix Ideas Ready!",
+            description: "Swipe up to see the new variations created for you",
+            variant: "success",
           });
 
           setIdeas(prev => {
@@ -197,17 +244,17 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
             return newIdeas;
           });
         }
-      } else {
-        throw new Error('Failed to generate remixes');
+      } catch (error) {
+        console.error('Failed to generate remixes:', error);
+        toast({
+          title: "Remix failed",
+          description: error instanceof Error ? error.message : "Couldn't generate remixes. Try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsRemixing(false);
       }
-    } catch (error) {
-      console.error('Failed to generate remixes:', error);
-      toast({
-        title: "Remix failed",
-        description: "Couldn't generate remixes. Try again later.",
-        variant: "destructive",
-      });
-    }
+    })();
   };
 
   const handleShare = async () => {
@@ -296,9 +343,9 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNextIdea, handlePreviousIdea, handleLike]);
 
-  // Initialize ideas when component mounts
+  // Initialize ideas and liked state when component mounts
   useEffect(() => {
-    const initializeIdeas = async () => {
+    const initializeData = async () => {
       if (ideas.length === 0) {
         setInitializing(true);
         try {
@@ -319,10 +366,48 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
       } else {
         setInitializing(false);
       }
+
+      // Load liked ideas state
+      try {
+        const likedSet = new Set<string>();
+        // Check each idea to see if it's liked (batch this later for better performance)
+        for (const idea of initialIdeas.slice(0, 10)) { // Check first 10 for initial state
+          const liked = await isIdeaLiked(idea.name);
+          if (liked) {
+            likedSet.add(idea.name);
+          }
+        }
+        setLikedIdeas(likedSet);
+      } catch (error) {
+        console.error('Failed to load liked ideas state:', error);
+      }
     };
 
-    initializeIdeas();
+    initializeData();
   }, []); // Only run once on mount
+
+  // Listen for inline toast events
+  useEffect(() => {
+    const handleToast = (event: CustomEvent) => {
+      const toastData = event.detail as ToastData;
+      setCurrentToast(toastData);
+      
+      // Auto dismiss after 4 seconds
+      setTimeout(() => {
+        setCurrentToast(null);
+      }, 4000);
+    };
+
+    window.addEventListener('inline-toast', handleToast as EventListener);
+    
+    return () => {
+      window.removeEventListener('inline-toast', handleToast as EventListener);
+    };
+  }, []);
+
+  const dismissToast = () => {
+    setCurrentToast(null);
+  };
 
   // Check for more ideas when advancing through them
   useEffect(() => {
@@ -379,7 +464,8 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
             onRemix={handleRemix}
             onShare={handleShare}
             onExpand={handleExpand}
-            isLiked={false} // Will be handled internally by the component
+            isLiked={likedIdeas.has(ideas[currentIndex]?.name || '')}
+            isRemixing={isRemixing}
             direction={direction}
           />
         </AnimatePresence>
@@ -422,6 +508,12 @@ export function IdeaFeed({ initialIdeas }: IdeaFeedProps) {
         onLike={handleLike}
         onRemix={handleRemix}
         onShare={handleShare}
+      />
+
+      {/* Inline Toast */}
+      <InlineToast
+        toast={currentToast}
+        onDismiss={dismissToast}
       />
     </div>
   );

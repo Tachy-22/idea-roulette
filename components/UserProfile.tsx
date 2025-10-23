@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, Heart, RotateCcw, Share } from 'lucide-react';
 import * as Icons from 'lucide-react';
-import { 
-  getLikedIdeas, 
-  getFounderPersonality, 
-  getUserPreferences, 
+import {
+  getLikedIdeas,
+  getFounderPersonality,
+  getUserPreferences,
   getSwipeCount,
   getUserInterests,
-  clearAllUserData 
+  clearAllUserData
 } from '@/lib/firebase-storage';
 import { StartupIdea } from '@/lib/gemini';
 import { useState, useEffect, SetStateAction } from 'react';
@@ -37,7 +37,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
     if (isOpen) {
       // Get current user
       setUser(auth.currentUser);
-      
+
       const loadData = async () => {
         const [likedData, personalityData, preferencesData, swipeData, interestsData] = await Promise.all([
           getLikedIdeas(),
@@ -46,22 +46,22 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
           getSwipeCount(),
           getUserInterests()
         ]);
-        
+
         setLikedIdeas(likedData);
         setPersonality(personalityData);
         setPreferences(preferencesData as unknown as SetStateAction<Record<string, unknown> | null>);
         setSwipeCount(swipeData);
         setInterests(interestsData);
       };
-      
+
       loadData();
     }
   }, [isOpen]);
 
   const getPersonalityConfig = () => {
-    const configs: Record<string, { 
-      icon: string; 
-      color: string; 
+    const configs: Record<string, {
+      icon: string;
+      color: string;
       bgColor: string;
     }> = {
       '🚀 Tech Visionary': {
@@ -103,7 +103,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
 
   const containerVariants = {
     initial: { x: '100%' },
-    animate: { 
+    animate: {
       x: 0,
       transition: {
         type: 'spring' as const,
@@ -111,7 +111,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
         damping: 30,
       }
     },
-    exit: { 
+    exit: {
       x: '100%',
       transition: {
         duration: 0.3,
@@ -121,7 +121,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
 
   const itemVariants = {
     initial: { opacity: 0 },
-    animate: { 
+    animate: {
       opacity: 1,
       transition: {
         type: 'spring' as const,
@@ -140,7 +140,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={onClose}
           />
 
@@ -150,20 +150,20 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
             initial="initial"
             animate="animate"
             exit="exit"
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-black z-50 overflow-hidden"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 overflow-hidden"
           >
             {/* Header */}
-            <div className="absolute top-0 right-0 p-6 border-b border-white/10 z-[999]">
+            <div className="absolute top-0 right-0 p-6 border-b border-gray-200 z-[999]">
               <motion.button
                 variants={itemVariants}
                 initial="initial"
                 animate="animate"
                 onClick={onClose}
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 text-white hover:bg-white/20 transition-colors"
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-600 hover:bg-gray-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </motion.button>
-{/* 
+              {/* 
               <motion.div
                 variants={itemVariants}
                 initial="initial"
@@ -176,7 +176,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
             </div>
 
             <ScrollArea className="h-[calc(100%)] ">
-              <div className="p-6 space-y-8">
+              <div className="p-6 flex flex-col gap-2">
                 {/* User Profile Header */}
                 {user && (
                   <motion.div
@@ -185,20 +185,20 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                     animate="animate"
                     className="pt-8"
                   >
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex flex-col justify-center items-center gap-4 mb-6">
                       {user.photoURL && (
-                        <img 
-                          src={user.photoURL} 
-                          alt="Profile" 
-                          className="w-16 h-16 rounded-full border-2 border-white/20"
+                        <img
+                          src={user.photoURL}
+                          alt="Profile"
+                          className="w-16 h-16 rounded-full border-2 border-gray-200"
                         />
                       )}
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-white mb-1">
+                      <div className="flex-1 flex flex-col justify-center">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-1">
                           {user.displayName || 'User'}
                         </h2>
-                        <p className="text-white/70 text-sm">{user.email}</p>
-                        <p className="text-white/50 text-xs mt-1">Track your startup journey</p>
+                        <p className="text-gray-600 text-sm mx-auto">{user.email}</p>
+                        {/* <p className="text-gray-500 text-xs mt-1">Track your startup journey</p> */}
                       </div>
                     </div>
                   </motion.div>
@@ -208,9 +208,9 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                   variants={itemVariants}
                   initial="initial"
                   animate="animate"
-                  className={`p-6 rounded-2xl ${config.bgColor} border border-white/10`}
+                  className="p-6 pt-0 rounded-2xl "
                 >
-                  <div className="flex items-center gap-4 mb-4">
+                  {/* <div className="flex items-center gap-4 mb-4">
                     <div className={`w-12 h-12 rounded-xl ${config.color} flex items-center justify-center`}>
                       {IconComponent && <IconComponent className="w-6 h-6 text-white" />}
                     </div>
@@ -218,20 +218,22 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                       <h3 className="text-white font-bold text-lg">{personality}</h3>
                       <p className="text-white/70 text-sm">Your founder type</p>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{likedIdeas.length}</div>
-                      <div className="text-xs text-white/70">Ideas Liked</div>
+                  </div> */}
+
+                  <div className="flex items-center justify-between py-3">
+                    <div className="text-center flex-1">
+                      <div className="text-2xl font-bold text-gray-900">{likedIdeas.length}</div>
+                      <div className="text-xs text-gray-600">Ideas Liked</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{swipeCount}</div>
-                      <div className="text-xs text-white/70">Ideas Swiped</div>
+                    <div className="w-px h-6 bg-gray-200 mx-2"></div>
+                    <div className="text-center flex-1">
+                      <div className="text-2xl font-bold text-gray-900">{swipeCount}</div>
+                      <div className="text-xs text-gray-600">Ideas Swiped</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{interests.length}</div>
-                      <div className="text-xs text-white/70">Interests</div>
+                    <div className="w-px h-6 bg-gray-200 mx-2"></div>
+                    <div className="text-center flex-1">
+                      <div className="text-2xl font-bold text-gray-900">{interests.length}</div>
+                      <div className="text-xs text-gray-600">Interests</div>
                     </div>
                   </div>
                 </motion.div>
@@ -244,13 +246,13 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                     animate="animate"
                     className="space-y-4"
                   >
-                    <h3 className="text-white font-bold text-lg">Your Interests</h3>
+                    {/* <h3 className="text-gray-900 font-bold text-lg">Your Interests</h3> */}
                     <div className="flex flex-wrap gap-2">
                       {interests.map((interest) => (
-                        <Badge 
+                        <Badge
                           key={interest}
-                          variant="secondary" 
-                          className="bg-white/10 text-white border-white/30 backdrop-blur-sm"
+                          variant="secondary"
+                          className="bg-gray-50 text-gray-700 border-gray-200"
                         >
                           {interest.split(' / ')[0]}
                         </Badge>
@@ -267,61 +269,61 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                   className="space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-white font-bold text-lg">Liked Ideas</h3>
-                    <Badge variant="outline" className="bg-white/10 text-white border-white/30">
+                    <h3 className="text-gray-900 font-bold text-lg">Liked Ideas</h3>
+                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
                       {likedIdeas.length}
                     </Badge>
                   </div>
 
                   {likedIdeas.length === 0 ? (
                     <div className="text-center py-8">
-                      <Heart className="w-12 h-12 text-white/30 mx-auto mb-4" />
-                      <p className="text-white/70">No liked ideas yet</p>
-                      <p className="text-white/50 text-sm mt-2">Start swiping to build your collection!</p>
+                      <Heart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600">No liked ideas yet</p>
+                      <p className="text-gray-500 text-sm mt-2">Start swiping to build your collection!</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {likedIdeas.map((idea) => {
                         const IdeaIcon = Icons[idea.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>;
-                        
+
                         return (
                           <motion.button
                             key={idea.name}
                             onClick={() => onIdeaSelect?.(idea)}
-                            className="w-full p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 hover:bg-white/10 transition-colors text-left group"
+                            className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors text-left group"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
                             <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center flex-shrink-0">
+                              {/* <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center flex-shrink-0">
                                 {IdeaIcon && <IdeaIcon className="w-5 h-5 text-white" />}
-                              </div>
-                              
+                              </div> */}
+
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="text-white font-semibold truncate">{idea.name}</h4>
-                                  <Badge variant="outline" className="bg-white/10 text-white border-white/30 text-xs">
+                                  <h4 className="text-gray-900 font-semibold truncate max-w-[50vw]">{idea.name}</h4>
+                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
                                     {idea.rating}
                                   </Badge>
                                 </div>
-                                
-                                <p className="text-white/70 text-sm line-clamp-2 mb-2">
+
+                                <p className="text-gray-600 text-sm line-clamp-2 mb-2">
                                   {idea.tagline}
                                 </p>
-                                
+
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="bg-white/10 text-white border-white/30 text-xs">
+                                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                                     {idea.category}
                                   </Badge>
                                 </div>
                               </div>
 
                               <div className="flex flex-col gap-1">
-                                <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                                  <Share className="w-4 h-4 text-white" />
+                                <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                                  <Share className="w-4 h-4 text-gray-600" />
                                 </button>
-                                <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                                  <RotateCcw className="w-4 h-4 text-white" />
+                                <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                                  <RotateCcw className="w-4 h-4 text-gray-600" />
                                 </button>
                               </div>
                             </div>
@@ -337,7 +339,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                   variants={itemVariants}
                   initial="initial"
                   animate="animate"
-                  className="pt-4 border-t border-white/10"
+                  className="pt-4 border-t border-gray-200"
                 >
                   <Button
                     onClick={async () => {
@@ -348,7 +350,7 @@ export function UserProfile({ isOpen, onClose, onIdeaSelect }: UserProfileProps)
                       }
                     }}
                     variant="destructive"
-                    className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                    className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200"
                   >
                     Clear All Data
                   </Button>

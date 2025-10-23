@@ -338,8 +338,8 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="w-full min-h-dvh bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full h-screen bg-gray-50 p-6 overflow-y-auto">
+      <div className="max-w-7xl mx-auto pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">IdeaRoulette Admin Dashboard</h1>
@@ -496,7 +496,7 @@ export function AdminDashboard() {
                           </span>
                           {activity.ideaName && (
                             <span className="text-gray-500 ml-1 truncate">
-                              "{activity.ideaName.slice(0, 30)}{activity.ideaName.length > 30 ? '...' : ''}"
+                              &ldquo;{activity.ideaName.slice(0, 30)}{activity.ideaName.length > 30 ? '...' : ''}&rdquo;
                             </span>
                           )}
                           {activity.category && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Heart, RotateCcw, Share, Expand } from 'lucide-react';
+import { Heart, RotateCcw, Share, Expand, Loader2 } from 'lucide-react';
 
 interface IdeaActionsProps {
   onLike: () => void;
@@ -10,6 +10,7 @@ interface IdeaActionsProps {
   onExpand: () => void;
   isLiked: boolean;
   isActive: boolean;
+  isRemixing?: boolean;
 }
 
 export function IdeaActions({
@@ -19,6 +20,7 @@ export function IdeaActions({
   onExpand,
   isLiked,
   isActive,
+  isRemixing = false,
 }: IdeaActionsProps) {
   const buttonVariants = {
     hidden: { 
@@ -87,16 +89,25 @@ export function IdeaActions({
           animate={isActive ? "visible" : "hidden"}
           whileHover="hover"
           whileTap="tap"
-          className="flex flex-col items-center"
+          className="flex flex-col items-center "
         >
           <button
-            className="w-12 h-12 rounded-full bg-black/20 border-2 border-white/40 text-white backdrop-blur-sm flex items-center justify-center transition-all duration-200"
+            className={`w-12 h-12 rounded-full border-2 text-white backdrop-blur-sm flex items-center justify-center transition-all duration-200 ${
+              isRemixing 
+                ? 'bg-orange-500/50 border-orange-500/60 cursor-wait' 
+                : 'bg-black/20 border-white/40 hover:bg-white/10'
+            }`}
             onClick={onRemix}
+            disabled={isRemixing}
           >
-            <RotateCcw className="w-6 h-6" />
+            {isRemixing ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <RotateCcw className="w-6 h-6" />
+            )}
           </button>
           <span className="sr-only">
-            Remix
+            {isRemixing ? 'Generating remixes...' : 'Remix'}
           </span>
         </motion.div>
 
